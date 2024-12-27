@@ -2,10 +2,10 @@
 
 
 ### create virtual environment
-python -m venv env
+python -m venv venv
 
 ### activate venv using
-env\Scripts\activate
+venv\Scripts\activate
 
 ### Install required libraries
 pip install -r requirement.txt
