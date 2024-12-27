@@ -20,7 +20,7 @@ def fetch_contact_info(firstName: str, lastName: str, company: str):
         phone_numbers = data['data']["phoneNumbers"]
 
         return {
-            "emails": [email["email"] for email in email_addresses],
+            "emails": ", ".join(email["email"] for email in email_addresses),  # Emails as a single string
             "phoneNumbers": [phone["internationalNumber"] for phone in phone_numbers],
         }
     except requests.exceptions.HTTPError as http_err:
@@ -54,7 +54,7 @@ def fetch_contact_info_by_linkedin(linkedinUrls: list[str]):
             results.append({
                 "linkedinUrl": linkedinUrl,
                 "contactInfo": {
-                    "emails": [email["email"] for email in email_addresses if "email" in email],
+                    "emails": ", ".join(email["email"] for email in email_addresses if "email" in email),  # Emails as a single string
                     "phoneNumbers": [phone.get("number", "N/A") for phone in phone_numbers],
                 }
             })
