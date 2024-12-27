@@ -31,32 +31,43 @@ def fetch_contact_info(firstName: str, lastName: str, company: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
 
-
-def fetch_contact_info_by_linkedin(linkedinUrl: str):
+def fetch_contact_info_by_linkedin(linkedinUrls: list[str]):
     """
-    Business logic to fetch contact information using LinkedIn URL via Lusha API.
+    Business logic to fetch contact information using a list of LinkedIn URLs via Lusha API.
     """
-    params = {"linkedinUrl": linkedinUrl}
     headers = {"api_key": API_KEY}
+    results = []  # To store individual results for each LinkedIn URL
 
-    try:
-        response = requests.get(LINKEDIN_URL_BASE, headers=headers, params=params)
-        response.raise_for_status()
-        data = response.json()
+    for linkedinUrl in linkedinUrls:
+        params = {"linkedinUrl": linkedinUrl}
+        
+        print("Processing LinkedIn URL:", linkedinUrl)
+        try:
+            response = requests.get(LINKEDIN_URL_BASE, headers=headers, params=params)
+            response.raise_for_status()
+            data = response.json()
 
-        email_addresses = data.get('contact', {}).get('data', {}).get("emailAddresses", [])
-        phone_numbers = data.get('contact', {}).get('data', {}).get("phoneNumbers", [])
+            email_addresses = data.get('contact', {}).get('data', {}).get("emailAddresses", [])
+            phone_numbers = data.get('contact', {}).get('data', {}).get("phoneNumbers", [])
 
-        return {
-            "emails": [email["email"] for email in email_addresses if "email" in email],
-            "phoneNumbers": [
-                phone.get("number", "N/A") for phone in phone_numbers
-            ],
-        }
-    except requests.exceptions.HTTPError as http_err:
-        raise HTTPException(
-            status_code=response.status_code,
-            detail=f"API Request failed: {response.text}"
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
+            # Append individual result to the results list
+            results.append({
+                "linkedinUrl": linkedinUrl,
+                "contactInfo": {
+                    "emails": [email["email"] for email in email_addresses if "email" in email],
+                    "phoneNumbers": [phone.get("number", "N/A") for phone in phone_numbers],
+                }
+            })
+
+        except requests.exceptions.HTTPError as http_err:
+            results.append({
+                "linkedinUrl": linkedinUrl,
+                "error": f"API Request failed: {response.text}"
+            })
+        except Exception as e:
+            results.append({
+                "linkedinUrl": linkedinUrl,
+                "error": f"Unexpected error: {e}"
+            })
+
+    return results
